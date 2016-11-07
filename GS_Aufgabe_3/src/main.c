@@ -15,7 +15,7 @@
 #include "bmpBearbeiten.h"
 int main(void)
 {
-	bmpBild *bild = einlesen("aufgabe3_bild1.bmp");
+	bmpBild *bild = einlesen("amrandrle_NO_BLUE_LINES.bmp");
 
 	unsigned char *objektbild = malloc(
 			sizeof(unsigned char) * bild->infoHeader.biHeight
@@ -40,7 +40,21 @@ int main(void)
 	objektFinden(objektbild, bild->infoHeader.biHeight,
 			bild->infoHeader.biWidth, &ergebnis);
 
-	ergebnis = objektbild;
+	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
+			i++)
+	{
+		if(ergebnis[i] == 255)
+		{
+			objektbild[i]=0;
+		}
+		if(i % bild->infoHeader.biWidth == 0)
+		{
+			//objektbild[i]= 0;
+		}
+	}
+	objektFinden(objektbild, bild->infoHeader.biHeight,
+				bild->infoHeader.biWidth, &ergebnis);
+	//ergebnis = objektbild;
 	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
 			i++)
 	{
@@ -56,8 +70,10 @@ int main(void)
 			bild->bildaten[i].rgbtBlue = 0;
 		}
 	}
+	//bild->bildaten[0].rgbtGreen=255;
+	//bild->bildaten[1].rgbtBlue=255;
+	speichern("test.bmp", bild);
 
-	speichern("test1.bmp", bild);
 	int red = bild->bildaten->rgbtRed;
 	int green = bild->bildaten->rgbtGreen;
 	int blue = bild->bildaten->rgbtBlue;

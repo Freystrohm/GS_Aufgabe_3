@@ -4,13 +4,12 @@
 void grassfire(unsigned char *pbild, int hoehe, int breite,
 		unsigned char* ergebnisbild);
 
-
 void dilatiere(unsigned char *pbild, int hoehe, int breite)
 {
-	unsigned char *temp = malloc(sizeof(unsigned char) * hoehe *breite);
+	unsigned char *temp = malloc(sizeof(unsigned char) * hoehe * breite);
 	for (int i = 0; i < hoehe * breite; i++)
 	{
-		temp[i]=pbild[i];
+		temp[i] = pbild[i];
 	}
 
 	for (int i = 0; i < hoehe; i++)
@@ -21,16 +20,16 @@ void dilatiere(unsigned char *pbild, int hoehe, int breite)
 			{
 				pbild[breite * (i + 1) + j] = 255;
 				pbild[breite * i + j + 1] = 255;
-			} else if (temp[breite * i + j] == 255 && j == breite
-					&& i == hoehe) //Ausnahme letzter Pixel
+			} else if (temp[breite * i + j] == 255 && j == breite - 1
+					&& i == hoehe - 1) //Ausnahme letzter Pixel
 			{
 				pbild[breite * (i - 1) + j] = 255;
 				pbild[breite * i + j - 1] = 255;
-			} else if (temp[breite * i + j] == 255 && j == 0 && i == hoehe) //Ausnahme Ecke unten links
+			} else if (temp[breite * i + j] == 255 && j == 0 && i == hoehe-1) //Ausnahme Ecke unten links
 			{
 				pbild[breite * (i - 1) + j] = 255;
 				pbild[breite * i + j + 1] = 255;
-			} else if (temp[breite * i + j] == 255 && j == 0) //Ausnahme Ecke oben rechts
+			} else if (temp[breite * i + j] == 255 && j == breite -1 && i == 0) //Ausnahme Ecke oben rechts
 			{
 				pbild[breite * (i + 1) + j] = 255;
 				pbild[breite * i + j - 1] = 255;
@@ -46,12 +45,12 @@ void dilatiere(unsigned char *pbild, int hoehe, int breite)
 				pbild[breite * (i + 1) + j] = 255;
 				pbild[breite * (i - 1) + j] = 255;
 				pbild[breite * i + j + 1] = 255;
-			} else if (temp[breite * i + j] == 255 && i == hoehe) //Ausnahem letzte Reihe
+			} else if (temp[breite * i + j] == 255 && i == hoehe - 1) //Ausnahem letzte Reihe
 			{
 				pbild[breite * (i - 1) + j] = 255;
 				pbild[breite * i + j + 1] = 255;
 				pbild[breite * i + j - 1] = 255;
-			} else if (temp[breite * i + j] == 255 && j == breite)	//Ausnahme letzte Spalte
+			} else if (temp[breite * i + j] == 255 && j == breite - 1)//Ausnahme letzte Spalte
 			{
 				pbild[breite * (i + 1) + j] = 255;
 				pbild[breite * (i - 1) + j] = 255;
@@ -72,7 +71,8 @@ void objektFinden(unsigned char *pbild, int hoehe, int breite,
 {
 	unsigned char bildarray[hoehe][breite];
 
-	unsigned char *ergebnisbild = malloc(sizeof(unsigned char) * hoehe * breite);
+	unsigned char *ergebnisbild = malloc(
+			sizeof(unsigned char) * hoehe * breite);
 	*ergebnis = ergebnisbild;
 	for (int i = 0; i < hoehe * breite; i++)
 	{
@@ -87,25 +87,22 @@ void objektFinden(unsigned char *pbild, int hoehe, int breite,
 		}
 	}
 
-	for (int i = 0; i < hoehe; i++)
+	for (int i = 0; i < hoehe * breite; i++)
 	{
-		for (int j = 0; j < breite; j++)
+		if (pbild[i] == 255)
 		{
-			if (bildarray[i][j] == 255)
-			{
-				ergebnisbild[i*breite +j] = 255;
-				grassfire(pbild, hoehe, breite, ergebnisbild);
-				return;
-			}
+			ergebnisbild[i] = 255;
+			grassfire(pbild, hoehe, breite, ergebnisbild);
+			return;
 		}
 	}
 }
 
 void grassfire(unsigned char *pbild, int hoehe, int breite,
-		unsigned char* ergebnisbild)
+		unsigned char *ergebnisbild)
 {
 	int akt = 1, letzt = 0;
-	while(letzt != akt)
+	while (letzt != akt)
 	{
 		letzt = akt;
 		akt = 0;
