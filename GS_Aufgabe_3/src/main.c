@@ -80,3 +80,45 @@ int main(void)
 	printf("Fertig %d %d %d", bild->bildaten->rgbtRed, green, blue);
 	return 0;
 }
+
+void bildBinarise(bmpBild *bild, unsigned char **binBild)
+{
+	unsigned char *objektbild = malloc(
+				sizeof(unsigned char) * bild->infoHeader.biHeight
+						* bild->infoHeader.biWidth);
+
+		for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
+				i++)
+		{
+			if ((bild->bildaten[i].rgbtRed == 255
+					|| bild->bildaten[i].rgbtGreen == 255)
+					&& bild->bildaten[i].rgbtBlue == 0)
+			{
+				objektbild[i] = 255;
+			} else
+			{
+				objektbild[i] = 0;
+			}
+		}
+
+		*binBild = objektbild;
+}
+
+void binBildWandeln(bmpBild *bild, unsigned char *binBild)
+{
+	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
+				i++)
+		{
+			if (binBild[i] == 255)
+			{
+				bild->bildaten[i].rgbtRed = 255;
+				bild->bildaten[i].rgbtGreen = 0;
+				bild->bildaten[i].rgbtBlue = 0;
+			} else
+			{
+				bild->bildaten[i].rgbtRed = 0;
+				bild->bildaten[i].rgbtGreen = 0;
+				bild->bildaten[i].rgbtBlue = 0;
+			}
+		}
+}

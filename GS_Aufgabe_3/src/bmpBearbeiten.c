@@ -64,12 +64,14 @@ void dilatiere(unsigned char *pbild, int hoehe, int breite)
 			}
 		}
 	}
+
+	free(temp);
 }
 
 void objektFinden(unsigned char *pbild, int hoehe, int breite,
 		unsigned char **ergebnis)
 {
-	unsigned char bildarray[hoehe][breite];
+	//unsigned char bildarray[hoehe][breite];
 
 	unsigned char *ergebnisbild = malloc(
 			sizeof(unsigned char) * hoehe * breite);
@@ -79,13 +81,13 @@ void objektFinden(unsigned char *pbild, int hoehe, int breite,
 		ergebnisbild[i] = 0;
 	}
 
-	for (int i = 0; i < hoehe; i++)
+	/*for (int i = 0; i < hoehe; i++)
 	{
 		for (int j = 0; j < breite; j++)
 		{
 			bildarray[i][j] = pbild[i * breite + j];
 		}
-	}
+	}*/
 
 	for (int i = 0; i < hoehe * breite; i++)
 	{
