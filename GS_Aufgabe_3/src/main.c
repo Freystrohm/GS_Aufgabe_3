@@ -15,7 +15,7 @@
 #include "bmpBearbeiten.h"
 int main(void)
 {
-	bmpBild *bild = einlesen("amrandrle_NO_BLUE_LINES.bmp");
+	bmpBild *bild = einlesen("aufgabe3_bild2.bmp");
 
 	unsigned char *objektbild = malloc(
 			sizeof(unsigned char) * bild->infoHeader.biHeight

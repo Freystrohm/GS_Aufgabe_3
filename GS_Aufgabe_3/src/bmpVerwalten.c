@@ -22,24 +22,20 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite);
 
 void farbenSchreiben(FILE *file, RGBTRIPLE *pbild, BITMAPINFOHEADER infoHeader);
 
-typedef struct tagRGBQUAD
-{
+typedef struct tagRGBQUAD {
 	unsigned char rgbBlue;
 	unsigned char rgbGreen;
 	unsigned char rgbRed;
 	unsigned char rgbReserved;
 } RGBQUAD;
 
-void hello(void)
-{
+void hello(void) {
 	printf("hallo aus einlesen");
 }
 
-bmpBild* einlesen(char const *filename)
-{
+bmpBild* einlesen(char const *filename) {
 	FILE *file = fopen(filename, "r");
-	if (file == NULL)
-	{
+	if (file == NULL) {
 		return NULL;
 	}
 	bmpBild bild;
@@ -81,88 +77,77 @@ bmpBild* einlesen(char const *filename)
 }
 
 RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
-		BITMAPFILEHEADER fileheader)
-{
+		BITMAPFILEHEADER fileheader) {
 	RGBTRIPLE *pbild = malloc(
 			sizeof(RGBTRIPLE) * infoHeader.biHeight * infoHeader.biWidth);
 	fseek(file, fileheader.bfOffBits, SEEK_SET);
 
-	if (infoHeader.biCompression == 1)
-	{
-		BYTE code[2] =
-		{ 1, 0 };
-		for (int i = 0; code[0] != 0 && code[1] != 1; i+=2)
-		{
-			fread(&code[0], sizeof(BYTE), 1, file);
+	if (infoHeader.biCompression == 1) {
+		BYTE code[2] = { 1, 0 };
+		for (int i = 0; !(code[0] == 0 && code[1] == 1); i += 2) {
+			//fread(code, sizeof(BYTE), 2, file);
+			int cont = fread(&code[0], sizeof(BYTE), 1, file);
+			int error = ferror(file);
+			int end = feof(file);
+
 			fread(&code[1], sizeof(BYTE), 1, file);
+			if ((code[0] == 1 && code[1] == 208) || i == 492) {
+				printf("hier %d", i);
+			}
 			pbild[i].rgbtRed = code[0];
 			pbild[i + 1].rgbtRed = code[1];
-			printf("%d|%d", (int)code[0], (int)code[1]);
+			printf("%d|%d", (int) code[0], (int) code[1]);
 			printf("\n");
+			fflush(stdout);
 		}
 		decompress(pbild, infoHeader.biHeight, infoHeader.biWidth);
-	} else if (infoHeader.biBitCount == BIT8)
-	{
-		for (int i = 0; i < infoHeader.biHeight * infoHeader.biWidth; i++)
-		{
+	} else if (infoHeader.biBitCount == BIT8) {
+		for (int i = 0; i < infoHeader.biHeight * infoHeader.biWidth; i++) {
 			fread(&pbild[i].rgbtRed, sizeof(unsigned char), 1, file);
 		}
-	} else
-	{
+	} else {
 		fread(pbild, sizeof(RGBTRIPLE),
 				infoHeader.biHeight * infoHeader.biWidth, file);
 	}
 
-	if(infoHeader.biBitCount == BIT8)
-	{
+	if (infoHeader.biBitCount == BIT8) {
 		farbenSchreiben(file, pbild, infoHeader);
 	}
 	return pbild;
 }
 
-void decompress(RGBTRIPLE *pbild, int hoehe, int breite)
-{
-	unsigned char compresseddata[hoehe * breite], code[2] =
-	{ 1, 5 };
-	for (int i = 0; i < hoehe * breite; i++)
-	{
+void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
+	unsigned char compresseddata[hoehe * breite], code[2] = { 1, 5 };
+	for (int i = 0; i < hoehe * breite; i++) {
 		compresseddata[i] = pbild[i].rgbtRed;
 	}
 	int bildpos = 0;
-	for (int i = 0; code[0] != 0 && code[1] != 1; i += 2)
-	{
+	for (int i = 0; code[0] != 0 && code[1] != 1; i += 2) {
 		code[0] = compresseddata[i];
 		code[1] = compresseddata[i + 1];
-		if (code[0] == 0)
-		{
-			if (code[1] == 2)
-			{
+		if (code[0] == 0) {
+			if (code[1] == 2) {
 				i += 2;
 				code[0] = compresseddata[i];
 				code[1] = compresseddata[i + 1];
 				bildpos += code[0] + code[1] * hoehe;
-			} else if (code[1] > 2)
-			{
+			} else if (code[1] > 2) {
 				int zahl = code[1];
-				for (int j = 0; j < zahl; j += 2)
-				{
+				for (int j = 0; j < zahl; j += 2) {
 					i += 2;
 					code[0] = compresseddata[i];
 					code[1] = compresseddata[i + 1];
 					pbild[bildpos].rgbtRed = code[0];
 					bildpos++;
-					if (code[1] != 0)
-					{
+					if (code[1] != 0) {
 						pbild[bildpos].rgbtRed = code[1];
 						bildpos++;
 					}
 				}
 			}
-		} else
-		{
+		} else {
 			int zahl = code[0];
-			for (int j = 0; j < zahl; j++)
-			{
+			for (int j = 0; j < zahl; j++) {
 				pbild[bildpos].rgbtRed = code[1];
 				bildpos++;
 			}
@@ -171,21 +156,18 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite)
 
 }
 
-void farbenSchreiben(FILE *file, RGBTRIPLE *pbild, BITMAPINFOHEADER infoHeader)
-{
+void farbenSchreiben(FILE *file, RGBTRIPLE *pbild, BITMAPINFOHEADER infoHeader) {
 	RGBQUAD palette[SIZEPAL];
 	fseek(file, STDHEADSIZE, SEEK_SET);
 	uint8_t indize;
-	for (int i = 0; i < SIZEPAL; i++)
-	{
+	for (int i = 0; i < SIZEPAL; i++) {
 		fread(&palette[i].rgbBlue, sizeof(unsigned char), 1, file);
 		fread(&palette[i].rgbGreen, sizeof(unsigned char), 1, file);
 		fread(&palette[i].rgbRed, sizeof(unsigned char), 1, file);
 		fread(&palette[i].rgbReserved, sizeof(unsigned char), 1, file);
 	}
 
-	for (int i = 0; i < infoHeader.biHeight * infoHeader.biWidth; i++)
-	{
+	for (int i = 0; i < infoHeader.biHeight * infoHeader.biWidth; i++) {
 
 		indize = pbild[i].rgbtRed;
 		pbild[i].rgbtBlue = palette[indize].rgbBlue;
@@ -197,44 +179,36 @@ void farbenSchreiben(FILE *file, RGBTRIPLE *pbild, BITMAPINFOHEADER infoHeader)
 }
 
 RGBTRIPLE* bildDatenLesenAlt(FILE *file, BITMAPINFOHEADER infoHeader,
-		BITMAPFILEHEADER fileheader)
-{
+		BITMAPFILEHEADER fileheader) {
 	fseek(file, fileheader.bfOffBits, SEEK_SET); //Lese zeiger an positon nach den Headern setzen
 	RGBTRIPLE bilddaten[infoHeader.biHeight][infoHeader.biWidth];
 	//RGBTRIPLE bilddaten[480][640];
 	RGBQUAD palette[SIZEPAL];
-	if (infoHeader.biBitCount == BIT8)
-	{
+	if (infoHeader.biBitCount == BIT8) {
 		//fseek(file, -(SIZEPAL*sizeof(unsigned char)*3), SEEK_CUR);
 		fseek(file, STDHEADSIZE, SEEK_SET);
 		uint8_t indize;
-		for (int i = 0; i < SIZEPAL; i++)
-		{
+		for (int i = 0; i < SIZEPAL; i++) {
 			fread(&palette[i].rgbBlue, sizeof(unsigned char), 1, file);
 			fread(&palette[i].rgbGreen, sizeof(unsigned char), 1, file);
 			fread(&palette[i].rgbRed, sizeof(unsigned char), 1, file);
 			fread(&palette[i].rgbReserved, sizeof(unsigned char), 1, file);
 		}
 		fseek(file, fileheader.bfOffBits, SEEK_SET);
-		for (int i = 0; i < infoHeader.biHeight; i++)
-		{
-			for (int j = 0; j < infoHeader.biWidth; j++)
-			{
+		for (int i = 0; i < infoHeader.biHeight; i++) {
+			for (int j = 0; j < infoHeader.biWidth; j++) {
 				fread(&indize, sizeof(uint8_t), 1, file);
 				bilddaten[i][j].rgbtBlue = palette[indize].rgbBlue;
 				bilddaten[i][j].rgbtGreen = palette[indize].rgbGreen;
 				bilddaten[i][j].rgbtRed = palette[indize].rgbRed;
 			}
 		}
-	} else if (infoHeader.biBitCount == BIT24)
-	{
+	} else if (infoHeader.biBitCount == BIT24) {
 
 		//fread(bilddaten, sizeof(bilddaten), 1, file);
 
-		for (int i = 0; i < infoHeader.biHeight; i++)
-		{
-			for (int j = 0; j < infoHeader.biWidth; j++)
-			{
+		for (int i = 0; i < infoHeader.biHeight; i++) {
+			for (int j = 0; j < infoHeader.biWidth; j++) {
 				fread(&bilddaten[i][j].rgbtBlue, sizeof(unsigned char), 1,
 						file);
 				fread(&bilddaten[i][j].rgbtGreen, sizeof(unsigned char), 1,
@@ -247,10 +221,8 @@ RGBTRIPLE* bildDatenLesenAlt(FILE *file, BITMAPINFOHEADER infoHeader,
 
 	RGBTRIPLE *pbild;
 	pbild = malloc(sizeof(bilddaten));
-	for (int i = 0; i < infoHeader.biHeight; i++)
-	{
-		for (int j = 0; j < infoHeader.biWidth; j++)
-		{
+	for (int i = 0; i < infoHeader.biHeight; i++) {
+		for (int j = 0; j < infoHeader.biWidth; j++) {
 			pbild[(i * infoHeader.biWidth) + j] = bilddaten[i][j];
 		}
 	}
@@ -259,8 +231,7 @@ RGBTRIPLE* bildDatenLesenAlt(FILE *file, BITMAPINFOHEADER infoHeader,
 	return pbild;
 }
 
-void speichern(char const *filename, bmpBild *bild)
-{
+void speichern(char const *filename, bmpBild *bild) {
 	FILE *file = fopen(filename, "w+");
 //schreiben FileHeader
 	fwrite(&bild->fileHeader.bfType, sizeof(WORD), 1, file);
@@ -284,8 +255,7 @@ void speichern(char const *filename, bmpBild *bild)
 
 //Schreiben der Bilddaten
 	for (int i = 0; i < bild->infoHeader.biWidth * bild->infoHeader.biHeight;
-			i++)
-	{
+			i++) {
 		fwrite(&bild->bildaten[i].rgbtBlue, sizeof(unsigned char), 1, file);
 		fwrite(&bild->bildaten[i].rgbtGreen, sizeof(unsigned char), 1, file);
 		fwrite(&bild->bildaten[i].rgbtRed, sizeof(unsigned char), 1, file);
