@@ -15,12 +15,12 @@
 #include "bmpBearbeiten.h"
 int main(void)
 {
-	bmpBild *bild = einlesen("aufgabe3_bild2.bmp");
+	bmpBild *bild = einlesen("amrandrle.bmp");
 
 	unsigned char *objektbild = malloc(
 			sizeof(unsigned char) * bild->infoHeader.biHeight
 					* bild->infoHeader.biWidth);
-
+/*
 	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
 			i++)
 	{
@@ -70,6 +70,7 @@ int main(void)
 			bild->bildaten[i].rgbtBlue = 0;
 		}
 	}
+	*/
 	//bild->bildaten[0].rgbtGreen=255;
 	//bild->bildaten[1].rgbtBlue=255;
 	speichern("test.bmp", bild);

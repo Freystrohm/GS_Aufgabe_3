@@ -34,7 +34,7 @@ void hello(void) {
 }
 
 bmpBild* einlesen(char const *filename) {
-	FILE *file = fopen(filename, "r");
+	FILE *file = fopen(filename, "rb");
 	if (file == NULL) {
 		return NULL;
 	}
@@ -85,20 +85,21 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 	if (infoHeader.biCompression == 1) {
 		BYTE code[2] = { 1, 0 };
 		for (int i = 0; !(code[0] == 0 && code[1] == 1); i += 2) {
-			//fread(code, sizeof(BYTE), 2, file);
-			int cont = fread(&code[0], sizeof(BYTE), 1, file);
-			int error = ferror(file);
-			int end = feof(file);
+			fread(code, sizeof(BYTE), 2, file);
 
-			fread(&code[1], sizeof(BYTE), 1, file);
-			if ((code[0] == 1 && code[1] == 208) || i == 492) {
-				printf("hier %d", i);
-			}
+//			int cont = fread(&code[0], sizeof(BYTE), 1, file);
+//			int error = ferror(file);
+//			int end = feof(file);
+//			fread(&code[1], sizeof(BYTE), 1, file);
+//			if ((code[0] == 1 && code[1] == 208) || i == 492) {
+//				printf("hier %d", i);
+//			}
+
 			pbild[i].rgbtRed = code[0];
 			pbild[i + 1].rgbtRed = code[1];
-			printf("%d|%d", (int) code[0], (int) code[1]);
-			printf("\n");
-			fflush(stdout);
+//			printf("%d|%d", (int) code[0], (int) code[1]);
+//			printf("\n");
+//			fflush(stdout);
 		}
 		decompress(pbild, infoHeader.biHeight, infoHeader.biWidth);
 	} else if (infoHeader.biBitCount == BIT8) {
@@ -122,7 +123,7 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 		compresseddata[i] = pbild[i].rgbtRed;
 	}
 	int bildpos = 0;
-	for (int i = 0; code[0] != 0 && code[1] != 1; i += 2) {
+	for (int i = 0; code[0] != 0 || code[1] != 1; i += 2) {
 		code[0] = compresseddata[i];
 		code[1] = compresseddata[i + 1];
 		if (code[0] == 0) {
@@ -139,10 +140,11 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 					code[1] = compresseddata[i + 1];
 					pbild[bildpos].rgbtRed = code[0];
 					bildpos++;
-					if (code[1] != 0) {
+					if (zahl%2 == 0 || zahl-j != 1) {
 						pbild[bildpos].rgbtRed = code[1];
 						bildpos++;
 					}
+
 				}
 			}
 		} else {
