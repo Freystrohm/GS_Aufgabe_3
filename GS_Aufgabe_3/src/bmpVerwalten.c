@@ -60,9 +60,17 @@ bmpBild* einlesen(char const *filename) {
 	fread(&bild.infoHeader.biClrUsed, sizeof(DWORD), 1, file);
 	fread(&bild.infoHeader.biClrImportant, sizeof(DWORD), 1, file);
 
+	fseek(file, 0L, SEEK_END);
+	int size = ftell(file);
+	if (size != bild.fileHeader.bfSize) {
+		return NULL;
+	}
 	//double sizepal = bild.fileHeader.bfOffBits - sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER);
 	bild.bildaten = bildDatenLesen(file, bild.infoHeader, bild.fileHeader);
 
+	if (bild.bildaten == NULL) {
+		return NULL;
+	}
 	bild.fileHeader.bfOffBits = STDHEADSIZE;
 	bild.infoHeader.biBitCount = BIT24;
 	bild.infoHeader.biCompression = 0;
@@ -86,6 +94,10 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 		BYTE code[2] = { 1, 0 };
 		for (int i = 0; !(code[0] == 0 && code[1] == 1); i += 2) {
 			fread(code, sizeof(BYTE), 2, file);
+
+			if (feof(file) && !(code[0] == 0 && code[1] == 1)) {
+				return NULL;
+			}
 
 //			int cont = fread(&code[0], sizeof(BYTE), 1, file);
 //			int error = ferror(file);
@@ -111,7 +123,7 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 				infoHeader.biHeight * infoHeader.biWidth, file);
 	}
 
-	if (infoHeader.biBitCount == BIT8) {
+	if (infoHeader.biBitCount == BIT8 && pbild != NULL) {
 		farbenSchreiben(file, pbild, infoHeader);
 	}
 	return pbild;
@@ -126,6 +138,13 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 	for (int i = 0; code[0] != 0 || code[1] != 1; i += 2) {
 		code[0] = compresseddata[i];
 		code[1] = compresseddata[i + 1];
+
+		if (bildpos % breite == 0 && code[0] != 0
+				&& (code[1] != 0 || code[1] != 1)) {
+			pbild = NULL;
+			return;
+		}
+
 		if (code[0] == 0) {
 			if (code[1] == 2) {
 				i += 2;
@@ -140,18 +159,17 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 					code[1] = compresseddata[i + 1];
 					pbild[bildpos].rgbtRed = code[0];
 					bildpos++;
-					if (zahl%2 == 0 || zahl-j != 1) {
+					if (zahl % 2 == 0 || zahl - j != 1) {
 						pbild[bildpos].rgbtRed = code[1];
 						bildpos++;
 					}
-
 				}
-			}
-		} else {
-			int zahl = code[0];
-			for (int j = 0; j < zahl; j++) {
-				pbild[bildpos].rgbtRed = code[1];
-				bildpos++;
+			} else {
+				int zahl = code[0];
+				for (int j = 0; j < zahl; j++) {
+					pbild[bildpos].rgbtRed = code[1];
+					bildpos++;
+				}
 			}
 		}
 	}

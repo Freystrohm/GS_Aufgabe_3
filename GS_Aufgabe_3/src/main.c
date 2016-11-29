@@ -15,8 +15,12 @@
 #include "bmpBearbeiten.h"
 int main(void)
 {
-	bmpBild *bild = einlesen("amrandrle.bmp");
-
+	bmpBild *bild = einlesen("aufgabe3_bild2.bmp");
+	if(bild == NULL)
+	{
+		printf("Bild ist Null");
+		return 1;
+	}
 	unsigned char *objektbild = malloc(
 			sizeof(unsigned char) * bild->infoHeader.biHeight
 					* bild->infoHeader.biWidth);
