@@ -63,6 +63,13 @@ bmpBild* einlesen(char const *filename) {
 	fseek(file, 0L, SEEK_END);
 	int size = ftell(file);
 	if (size != bild.fileHeader.bfSize) {
+		printf("FileSize not ok");
+		return NULL;
+	}
+
+	if(bild.infoHeader.biHeight > 5000 ||bild.infoHeader.biWidth > 5000)
+	{
+		printf("Zu große Hoehe oder Breite");
 		return NULL;
 	}
 	//double sizepal = bild.fileHeader.bfOffBits - sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER);
@@ -96,6 +103,7 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 			fread(code, sizeof(BYTE), 2, file);
 
 			if (feof(file) && !(code[0] == 0 && code[1] == 1)) {
+				printf("End indicator is missing");
 				return NULL;
 			}
 
@@ -114,6 +122,11 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 //			fflush(stdout);
 		}
 		decompress(pbild, infoHeader.biHeight, infoHeader.biWidth);
+		if(pbild->rgbtBlue != 0)
+		{
+			printf("DECOMPRESS ist fehlgeschlagen\n");
+			pbild=NULL;
+		}
 	} else if (infoHeader.biBitCount == BIT8) {
 		for (int i = 0; i < infoHeader.biHeight * infoHeader.biWidth; i++) {
 			fread(&pbild[i].rgbtRed, sizeof(unsigned char), 1, file);
@@ -130,6 +143,7 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 }
 
 void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
+	pbild->rgbtBlue = 0;
 	unsigned char compresseddata[hoehe * breite], code[2] = { 1, 5 };
 	for (int i = 0; i < hoehe * breite; i++) {
 		compresseddata[i] = pbild[i].rgbtRed;
@@ -139,11 +153,18 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 		code[0] = compresseddata[i];
 		code[1] = compresseddata[i + 1];
 
-		if (bildpos % breite == 0 && code[0] != 0
-				&& (code[1] != 0 || code[1] != 1)) {
-			pbild = NULL;
+
+		if(bildpos > hoehe * breite)
+		{
+			pbild->rgbtBlue = 150;
 			return;
 		}
+
+//		if (bildpos % breite == 0 && code[0] != 0
+//				&& (code[1] != 0 || code[1] != 1)) {
+//			pbild = NULL;
+//			return;
+//		}
 
 		if (code[0] == 0) {
 			if (code[1] == 2) {
@@ -159,17 +180,18 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 					code[1] = compresseddata[i + 1];
 					pbild[bildpos].rgbtRed = code[0];
 					bildpos++;
-					if (zahl % 2 == 0 || zahl - j != 1) {
+					if (zahl%2 == 0 || zahl-j != 1) {
 						pbild[bildpos].rgbtRed = code[1];
 						bildpos++;
 					}
+
 				}
-			} else {
-				int zahl = code[0];
-				for (int j = 0; j < zahl; j++) {
-					pbild[bildpos].rgbtRed = code[1];
-					bildpos++;
-				}
+			}
+		} else {
+			int zahl = code[0];
+			for (int j = 0; j < zahl; j++) {
+				pbild[bildpos].rgbtRed = code[1];
+				bildpos++;
 			}
 		}
 	}
