@@ -15,68 +15,14 @@
 #include "bmpBearbeiten.h"
 int main(void)
 {
-	bmpBild *bild = einlesen("aufgabe3_bild2.bmp");
+	bmpBild *bild = einlesen("rotmitlochrlemod1.bmp");
 	if(bild == NULL)
 	{
 		printf("Bild ist Null");
 		return 1;
 	}
-	unsigned char *objektbild = malloc(
-			sizeof(unsigned char) * bild->infoHeader.biHeight
-					* bild->infoHeader.biWidth);
-/*
-	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
-			i++)
-	{
-		if ((bild->bildaten[i].rgbtRed == 255
-				|| bild->bildaten[i].rgbtGreen == 255)
-				&& bild->bildaten[i].rgbtBlue == 0)
-		{
-			objektbild[i] = 255;
-		} else
-		{
-			objektbild[i] = 0;
-		}
-	}
 
-	unsigned char *ergebnis = NULL;
-
-	objektFinden(objektbild, bild->infoHeader.biHeight,
-			bild->infoHeader.biWidth, &ergebnis);
-
-	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
-			i++)
-	{
-		if(ergebnis[i] == 255)
-		{
-			objektbild[i]=0;
-		}
-		if(i % bild->infoHeader.biWidth == 0)
-		{
-			//objektbild[i]= 0;
-		}
-	}
-	objektFinden(objektbild, bild->infoHeader.biHeight,
-				bild->infoHeader.biWidth, &ergebnis);
-	//ergebnis = objektbild;
-	for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
-			i++)
-	{
-		if (ergebnis[i] == 255)
-		{
-			bild->bildaten[i].rgbtRed = 255;
-			bild->bildaten[i].rgbtGreen = 0;
-			bild->bildaten[i].rgbtBlue = 0;
-		} else
-		{
-			bild->bildaten[i].rgbtRed = 0;
-			bild->bildaten[i].rgbtGreen = 0;
-			bild->bildaten[i].rgbtBlue = 0;
-		}
-	}
-	*/
-	//bild->bildaten[0].rgbtGreen=255;
-	//bild->bildaten[1].rgbtBlue=255;
+	bildBearbeiten(bild);
 	speichern("test.bmp", bild);
 
 	int red = bild->bildaten->rgbtRed;
@@ -86,28 +32,6 @@ int main(void)
 	return 0;
 }
 
-void bildBinarise(bmpBild *bild, unsigned char **binBild)
-{
-	unsigned char *objektbild = malloc(
-				sizeof(unsigned char) * bild->infoHeader.biHeight
-						* bild->infoHeader.biWidth);
-
-		for (int i = 0; i < bild->infoHeader.biHeight * bild->infoHeader.biWidth;
-				i++)
-		{
-			if ((bild->bildaten[i].rgbtRed == 255
-					|| bild->bildaten[i].rgbtGreen == 255)
-					&& bild->bildaten[i].rgbtBlue == 0)
-			{
-				objektbild[i] = 255;
-			} else
-			{
-				objektbild[i] = 0;
-			}
-		}
-
-		*binBild = objektbild;
-}
 
 void binBildWandeln(bmpBild *bild, unsigned char *binBild)
 {

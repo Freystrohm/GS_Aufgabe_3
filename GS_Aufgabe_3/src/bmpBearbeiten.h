@@ -8,7 +8,18 @@
 #ifndef BMPBEARBEITEN_H_
 #define BMPBEARBEITEN_H_
 
-void objektFinden(unsigned char *pbild, int hoehe, int breite,
-		unsigned char **ergebnisbild);
+#include "bmpVerwalten.h"
+
+void bildBearbeiten(bmpBild *bild);
+
+typedef struct tagRECHTECKINFO
+{
+        int posX;
+        int posY;
+        int groesseRechteck;
+        int hoeheRechteck;
+        int breiteRechteck;
+        int istRechteck;
+}RECHTECKINFO;
 
 #endif /* BMPBEARBEITEN_H_ */
