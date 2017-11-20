@@ -15,7 +15,7 @@
 #include "bmpBearbeiten.h"
 int main(void)
 {
-	bmpBild *bild = einlesen("rotmitlochrlemod1.bmp");
+	bmpBild *bild = einlesen("testbilderneu/128x480_8_bit_komprimiert_ohne_padding_bytes_zeile_zu_lang.bmp");
 	if(bild == NULL)
 	{
 		printf("Bild ist Null");

@@ -18,7 +18,7 @@
 
 RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 		BITMAPFILEHEADER fileheader);
-void decompress(RGBTRIPLE *pbild, int hoehe, int breite);
+int decompress(RGBTRIPLE *bild, int hoehe, int breite);
 
 void farbenSchreiben(FILE *file, RGBTRIPLE *pbild, BITMAPINFOHEADER infoHeader);
 
@@ -67,6 +67,12 @@ bmpBild* einlesen(char const *filename) {
 		return NULL;
 	}
 
+	if(bild.fileHeader.bfType != 0x4d42)
+	{
+		printf("Wrong BFType\n");
+		return NULL;
+	}
+
 	if(bild.infoHeader.biHeight > 5000 ||bild.infoHeader.biWidth > 5000)
 	{
 		printf("Zu große Hoehe oder Breite");
@@ -93,8 +99,14 @@ bmpBild* einlesen(char const *filename) {
 
 RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 		BITMAPFILEHEADER fileheader) {
-	RGBTRIPLE *pbild = malloc(
+	RGBTRIPLE *pbild =NULL;
+	pbild = malloc(
 			sizeof(RGBTRIPLE) * infoHeader.biHeight * infoHeader.biWidth);
+	if(pbild== NULL)
+	{
+		printf("Malloc Error");
+		return NULL;
+	}
 	fseek(file, fileheader.bfOffBits, SEEK_SET);
 
 	if (infoHeader.biCompression == 1) {
@@ -121,12 +133,16 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 //			printf("\n");
 //			fflush(stdout);
 		}
-		decompress(pbild, infoHeader.biHeight, infoHeader.biWidth);
-		if(pbild->rgbtBlue != 0)
+		printf("DECOMPRESS start \n");
+		//int check = -100;
+		int check = decompress(pbild, infoHeader.biHeight, infoHeader.biWidth);
+		if(check < 0)
 		{
 			printf("DECOMPRESS ist fehlgeschlagen\n");
+			//free(pbild); ----------------------------------------------------------------------------------------------------------------- Hier Fehler beim ausführen
 			pbild=NULL;
 		}
+		printf("DECOMPRESS ende\n");
 	} else if (infoHeader.biBitCount == BIT8) {
 		for (int i = 0; i < infoHeader.biHeight * infoHeader.biWidth; i++) {
 			fread(&pbild[i].rgbtRed, sizeof(unsigned char), 1, file);
@@ -137,16 +153,17 @@ RGBTRIPLE* bildDatenLesen(FILE *file, BITMAPINFOHEADER infoHeader,
 	}
 
 	if (infoHeader.biBitCount == BIT8 && pbild != NULL) {
+		printf("Farbenschreiben start\n");
 		farbenSchreiben(file, pbild, infoHeader);
 	}
 	return pbild;
 }
 
-void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
-	pbild->rgbtBlue = 0;
+int decompress(RGBTRIPLE *bild, int hoehe, int breite) {
+	bild->rgbtBlue = 0;
 	unsigned char compresseddata[hoehe * breite], code[2] = { 1, 5 };
 	for (int i = 0; i < hoehe * breite; i++) {
-		compresseddata[i] = pbild[i].rgbtRed;
+		compresseddata[i] = bild[i].rgbtRed;
 	}
 	int bildpos = 0;
 	for (int i = 0; code[0] != 0 || code[1] != 1; i += 2) {
@@ -156,8 +173,8 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 
 		if(bildpos > hoehe * breite)
 		{
-			pbild->rgbtBlue = 150;
-			return;
+			bild->rgbtBlue = 150;
+			return -100;
 		}
 
 //		if (bildpos % breite == 0 && code[0] != 0
@@ -178,10 +195,10 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 					i += 2;
 					code[0] = compresseddata[i];
 					code[1] = compresseddata[i + 1];
-					pbild[bildpos].rgbtRed = code[0];
+					bild[bildpos].rgbtRed = code[0];
 					bildpos++;
 					if (zahl%2 == 0 || zahl-j != 1) {
-						pbild[bildpos].rgbtRed = code[1];
+						bild[bildpos].rgbtRed = code[1];
 						bildpos++;
 					}
 
@@ -190,11 +207,13 @@ void decompress(RGBTRIPLE *pbild, int hoehe, int breite) {
 		} else {
 			int zahl = code[0];
 			for (int j = 0; j < zahl; j++) {
-				pbild[bildpos].rgbtRed = code[1];
+				bild[bildpos].rgbtRed = code[1];
 				bildpos++;
 			}
 		}
 	}
+
+	return 0;
 
 }
 
